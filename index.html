@@ -15,6 +15,7 @@
   --cell-bg: #ffffff;
   --cell-disabled: #e5e7eb;
   --wrong: #fee2e2;
+  --grid-bold: #334155;
 }
 
 .dark {
@@ -26,6 +27,7 @@
   --cell-bg: #020617;
   --cell-disabled: #1e293b;
   --wrong: #7f1d1d;
+  --grid-bold: #94a3b8;
 }
 
 body {
@@ -73,10 +75,6 @@ button {
   color: white;
   font-weight: 600;
   margin-top: 8px;
-}
-
-button.secondary {
-  background: var(--secondary);
 }
 
 .toggle {
@@ -137,6 +135,14 @@ button.secondary {
   background: var(--wrong);
 }
 
+/* Bold 3×3 grid lines */
+.cell.bold-right {
+  border-right: 3px solid var(--grid-bold);
+}
+.cell.bold-bottom {
+  border-bottom: 3px solid var(--grid-bold);
+}
+
 .footer {
   text-align: center;
   font-size: 12px;
@@ -179,30 +185,38 @@ button.secondary {
 </div>
 
 <script>
-/* ---------- Fixed solved grid ---------- */
+/* Solved grid */
 const solution =
 "534678912672195348198342567859761423426853791713924856961537284287419635345286179";
 
-/* ---------- Seeded RNG ---------- */
+/* Seeded random */
 function rand(seed) {
   return Math.abs(Math.sin(seed)) % 1;
 }
 
-/* ---------- Puzzle generator ---------- */
+/* Puzzle generator */
 function generatePuzzle(seed, difficulty) {
-  let blanks = { easy: 35, medium: 45, hard: 55 }[difficulty];
-  let puzzle = solution.split("");
+  const blanks = {
+    easy: 32,
+    medium: 45,
+    hard: 60   // much fewer starting numbers
+  }[difficulty];
 
-  for (let i = 0; i < blanks; i++) {
+  let puzzle = solution.split("");
+  let removed = 0;
+
+  for (let i = 0; removed < blanks && i < 200; i++) {
     let idx = Math.floor(rand(seed + i) * 81);
-    puzzle[idx] = "0";
+    if (puzzle[idx] !== "0") {
+      puzzle[idx] = "0";
+      removed++;
+    }
   }
   return puzzle.join("");
 }
 
 let startTime, timer, mistakes = 0;
 
-/* ---------- Game ---------- */
 function startGame() {
   const seed = Number(seedInput.value || 1);
   const diff = difficulty.value;
@@ -224,6 +238,11 @@ function startGame() {
     const c = document.createElement("input");
     c.className = "cell";
     c.maxLength = 1;
+
+    const row = Math.floor(i / 9);
+    const col = i % 9;
+    if (col === 2 || col === 5) c.classList.add("bold-right");
+    if (row === 2 || row === 5) c.classList.add("bold-bottom");
 
     if (v !== "0") {
       c.value = v;
@@ -256,7 +275,7 @@ function updateTimer() {
 }
 
 function checkWin() {
-  if ([...document.querySelectorAll(".cell")].every((c,i)=>c.value==solution[i])) {
+  if ([...document.querySelectorAll(".cell")].every((c,i)=>c.value == solution[i])) {
     clearInterval(timer);
     alert("Finished! Share your score 🏆");
   }
