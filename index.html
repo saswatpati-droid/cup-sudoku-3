@@ -10,116 +10,127 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <style>
-:root {
-  --bg: #eef4ff;
-  --card: #ffffff;
-  --accent: #4f7cff;
-  --grid: #94a3b8;
-  --bold: #475569;
-  --cell: #f8fbff;
+:root{
+  --bg:#eef4ff;
+  --card:#ffffff;
+  --accent:#4f7cff;
+  --cell:#f8fbff;
+  --fixed:#dbe6ff;
+  --grid:#94a3b8;
+  --bold:#475569;
+  --num:#1e3a8a;
+  --wrong:#ffd6d6;
 }
 
-* { box-sizing: border-box; }
+*{box-sizing:border-box}
 
-body {
-  margin: 0;
-  font-family: system-ui, sans-serif;
-  background: var(--bg);
-  display: flex;
-  justify-content: center;
-  padding: 12px;
+body{
+  margin:0;
+  font-family:system-ui,sans-serif;
+  background:var(--bg);
+  display:flex;
+  justify-content:center;
+  padding:12px;
 }
 
-.app {
-  width: 100%;
-  max-width: 380px;
-  background: var(--card);
-  border-radius: 16px;
-  padding: 14px;
+.app{
+  width:100%;
+  max-width:380px;
+  background:var(--card);
+  border-radius:18px;
+  padding:14px;
 }
 
-h1 {
-  text-align: center;
-  color: var(--accent);
-  margin: 4px 0;
+h1{
+  text-align:center;
+  color:var(--accent);
+  margin:6px 0;
 }
 
-.subtitle {
-  text-align: center;
-  font-size: 13px;
-  margin-bottom: 8px;
-  opacity: 0.75;
+.subtitle{
+  text-align:center;
+  font-size:13px;
+  opacity:.75;
+  margin-bottom:10px;
 }
 
-select, button, input {
-  width: 100%;
-  padding: 12px;
-  border-radius: 12px;
-  border: none;
-  margin-top: 8px;
-  font-size: 14px;
+select,button,input{
+  width:100%;
+  padding:12px;
+  border-radius:12px;
+  border:none;
+  font-size:14px;
+  margin-top:8px;
 }
 
-button {
-  background: var(--accent);
-  color: white;
-  font-weight: 600;
+button{
+  background:var(--accent);
+  color:#fff;
+  font-weight:600;
 }
 
-.hidden { display: none; }
+.hidden{display:none}
 
-.board {
-  display: grid;
-  grid-template-columns: repeat(9, 1fr);
-  width: min(92vw, 320px);
-  aspect-ratio: 1;
-  margin: 10px auto;
-  gap: 1px;
+.board{
+  display:grid;
+  grid-template-columns:repeat(9,1fr);
+  width:min(92vw,320px);
+  aspect-ratio:1;
+  margin:10px auto;
+  gap:1px;
 }
 
-.cell {
-  background: var(--cell);
-  border: 1px solid var(--grid);
-  border-radius: 6px;
-  text-align: center;
-  font-size: 18px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.cell{
+  background:var(--cell);
+  border:1px solid var(--grid);
+  border-radius:6px;
+  font-size:20px;
+  font-weight:600;
+  color:var(--num);
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 
-.cell:disabled {
-  background: #dde7ff;
+.cell.fixed{background:var(--fixed)}
+.cell.selected{outline:2px solid var(--accent)}
+.cell.wrong{background:var(--wrong)}
+
+.cell.bold-r{border-right:3px solid var(--bold)}
+.cell.bold-b{border-bottom:3px solid var(--bold)}
+
+.pad{
+  display:grid;
+  grid-template-columns:repeat(9,1fr);
+  gap:6px;
+  margin-top:8px;
 }
 
-.cell.bold-r { border-right: 3px solid var(--bold); }
-.cell.bold-b { border-bottom: 3px solid var(--bold); }
-
-.pad {
-  display: grid;
-  grid-template-columns: repeat(9, 1fr);
-  gap: 6px;
+.pad button{
+  background:var(--fixed);
+  color:var(--num);
+  font-weight:700;
+  font-size:16px;
 }
 
-.pad button {
-  background: #dbe6ff;
-  color: #1e3a8a;
-  font-weight: 700;
+.reactions{
+  display:flex;
+  justify-content:space-around;
+  margin-top:10px;
+  font-size:22px;
 }
 
-.reactions {
-  display: flex;
-  justify-content: space-around;
-  margin-top: 8px;
-  font-size: 22px;
+.result{
+  text-align:center;
+  margin-top:14px;
+  font-weight:600;
 }
 
-.footer {
-  text-align: center;
-  font-size: 12px;
-  opacity: 0.6;
-  margin-top: 6px;
+.footer{
+  text-align:center;
+  font-size:12px;
+  opacity:.6;
+  margin-top:10px;
 }
 </style>
 </head>
@@ -133,8 +144,8 @@ button {
 <!-- SETUP -->
 <div id="setup">
   <select id="player">
-    <option value="A">Chia</option>
-    <option value="B">Chiklu</option>
+    <option value="A">Player A</option>
+    <option value="B">Player B</option>
   </select>
 
   <select id="difficulty">
@@ -143,7 +154,15 @@ button {
     <option value="hard">Hard</option>
   </select>
 
-  <button onclick="joinGame()">Join Game</button>
+  <button onclick="join()">Continue</button>
+
+  <div id="shareBox" class="hidden">
+    <input id="link" readonly>
+    <button onclick="copy()">Copy Link</button>
+    <button onclick="start()">Start Game</button>
+  </div>
+
+  <div class="footer">Made by chiklu with ❤️</div>
 </div>
 
 <!-- GAME -->
@@ -152,133 +171,157 @@ button {
   <div class="pad" id="pad"></div>
 
   <div class="reactions">
-    <span onclick="sendReaction('🔥')">🔥</span>
-    <span onclick="sendReaction('😂')">😂</span>
-    <span onclick="sendReaction('😤')">😤</span>
-    <span onclick="sendReaction('❤️')">❤️</span>
-    <span onclick="sendReaction('😈')">😈</span>
+    <span onclick="react('🔥')">🔥</span>
+    <span onclick="react('😂')">😂</span>
+    <span onclick="react('😤')">😤</span>
+    <span onclick="react('❤️')">❤️</span>
+    <span onclick="react('😈')">😈</span>
   </div>
 
-  <div id="reactionFeed"></div>
+  <div id="result" class="result hidden"></div>
 </div>
-
-<div class="footer">Made by chiklu with ❤️</div>
 
 </div>
 
 <script>
 /* FIREBASE */
 firebase.initializeApp({
-  apiKey: "AIzaSyDVWYWtBbnIi4p2vEIcNPSypU5EcmDhPwU",
-  authDomain: "vs1-sudoku.firebaseapp.com",
-  databaseURL: "https://vs1-sudoku-default-rtdb.firebaseio.com",
-  projectId: "vs1-sudoku",
+  apiKey:"AIzaSyDVWYWtBbnIi4p2vEIcNPSypU5EcmDhPwU",
+  authDomain:"vs1-sudoku.firebaseapp.com",
+  databaseURL:"https://vs1-sudoku-default-rtdb.firebaseio.com",
+  projectId:"vs1-sudoku"
 });
+const db=firebase.database();
 
-const db = firebase.database();
+/* GAME STATE */
+const params=new URLSearchParams(location.search);
+const gameId=params.get("game")||Math.random().toString(36).slice(2);
+const ref=db.ref("games/"+gameId);
 
-/* GAME ID */
-const params = new URLSearchParams(location.search);
-const gameId = params.get("game") || Math.random().toString(36).slice(2);
-const ref = db.ref("games/" + gameId);
+const SOLUTION="534678912672195348198342567859761423426853791713924856961537284287419635345286179";
+let puzzle="", me="", selected=null;
+let startTime=0, mistakes=0, finished=false;
 
-/* SOLVED GRID */
-const SOLUTION =
-"534678912672195348198342567859761423426853791713924856961537284287419635345286179";
-
-/* PUZZLE GENERATOR */
-function generatePuzzle(diff) {
-  let blanks = diff === "easy" ? 32 : diff === "medium" ? 45 : 60;
-  let arr = SOLUTION.split("");
-  let removed = 0;
-  while (removed < blanks) {
-    let i = Math.floor(Math.random() * 81);
-    if (arr[i] !== "0") {
-      arr[i] = "0";
-      removed++;
-    }
+/* PUZZLE */
+function gen(diff){
+  let blanks=diff==="easy"?32:diff==="medium"?45:60;
+  let arr=SOLUTION.split("");
+  while(blanks){
+    let i=Math.floor(Math.random()*81);
+    if(arr[i]!=="0"){arr[i]="0";blanks--}
   }
   return arr.join("");
 }
 
 /* FLOW */
-let me = "";
-let selected = null;
-
-function joinGame() {
-  me = player.value;
-  const diff = difficulty.value;
-
-  ref.once("value", snap => {
-    if (!snap.exists()) {
-      ref.set({
-        puzzle: generatePuzzle(diff)
-      });
+function join(){
+  me=player.value;
+  ref.once("value",s=>{
+    if(!s.exists()){
+      puzzle=gen(difficulty.value);
+      ref.set({puzzle,results:{}});
     }
-    startGame();
   });
-
-  history.replaceState(null, "", "?game=" + gameId);
+  link.value=location.origin+location.pathname+"?game="+gameId;
+  shareBox.classList.remove("hidden");
+  history.replaceState(null,"","?game="+gameId);
 }
 
-function startGame() {
+function copy(){
+  link.select();
+  document.execCommand("copy");
+}
+
+function start(){
   setup.classList.add("hidden");
   game.classList.remove("hidden");
-
-  ref.child("puzzle").once("value", snap => {
-    renderBoard(snap.val());
-  });
-
+  startTime=Date.now();
+  ref.child("puzzle").once("value",s=>render(s.val()));
   buildPad();
 }
 
 /* BOARD */
-function renderBoard(puzzle) {
-  board.innerHTML = "";
-  puzzle.split("").forEach((v, i) => {
-    const c = document.createElement("input");
-    c.className = "cell";
-    c.maxLength = 1;
+function render(p){
+  board.innerHTML="";
+  p.split("").forEach((v,i)=>{
+    let d=document.createElement("div");
+    d.className="cell";
+    let r=Math.floor(i/9),c=i%9;
+    if(c===2||c===5)d.classList.add("bold-r");
+    if(r===2||r===5)d.classList.add("bold-b");
 
-    const r = Math.floor(i / 9);
-    const col = i % 9;
-    if (col === 2 || col === 5) c.classList.add("bold-r");
-    if (r === 2 || r === 5) c.classList.add("bold-b");
-
-    if (v !== "0") {
-      c.value = v;
-      c.disabled = true;
-    } else {
-      c.onclick = () => selected = c;
+    if(v!=="0"){
+      d.textContent=v;
+      d.classList.add("fixed");
+    }else{
+      d.onclick=()=>{
+        document.querySelectorAll(".cell").forEach(x=>x.classList.remove("selected"));
+        d.classList.add("selected");
+        selected=d;
+      };
     }
-
-    board.appendChild(c);
+    board.appendChild(d);
   });
 }
 
-/* NUMBER PAD */
-function buildPad() {
-  pad.innerHTML = "";
-  for (let i = 1; i <= 9; i++) {
-    let b = document.createElement("button");
-    b.textContent = i;
-    b.onclick = () => {
-      if (selected && !selected.disabled) selected.value = i;
-    };
+/* PAD */
+function buildPad(){
+  pad.innerHTML="";
+  for(let i=1;i<=9;i++){
+    let b=document.createElement("button");
+    b.textContent=i;
+    b.onclick=()=>place(i);
     pad.appendChild(b);
   }
 }
 
-/* REACTIONS */
-function sendReaction(e) {
-  ref.child("reactions").push({ from: me, e });
+function place(n){
+  if(!selected||selected.classList.contains("fixed")||finished)return;
+  const idx=[...board.children].indexOf(selected);
+  if(SOLUTION[idx]===String(n)){
+    selected.textContent=n;
+    selected.classList.remove("wrong","selected");
+    selected=null;
+    checkWin();
+  }else{
+    selected.classList.add("wrong");
+    mistakes++;
+  }
 }
 
-ref.child("reactions").on("child_added", s => {
-  const r = s.val();
-  reactionFeed.textContent = `${r.from}: ${r.e}`;
-});
-</script>
+/* WIN CHECK */
+function checkWin(){
+  const filled=[...board.children].every((c,i)=>
+    c.textContent && c.textContent===SOLUTION[i]
+  );
+  if(filled){
+    finished=true;
+    const time=Math.floor((Date.now()-startTime)/1000);
+    const score=Math.max(0,10000-time*2-mistakes*100);
+    ref.child("results/"+me).set({time,score});
+  }
+}
 
+/* RESULTS */
+ref.child("results").on("value",s=>{
+  const r=s.val();
+  if(!r||!r.A||!r.B)return;
+  const a=r.A,b=r.B;
+  const winner=a.score>b.score?"Player A":"Player B";
+  const diff=Math.abs(a.score-b.score);
+  result.innerHTML=`
+    ${winner} wins 🏆<br>
+    A: ${a.score} (${a.time}s)<br>
+    B: ${b.score} (${b.time}s)<br>
+    Margin: ${diff}
+  `;
+  result.classList.remove("hidden");
+});
+
+/* REACTIONS */
+function react(e){
+  ref.child("reactions").push({from:me,e});
+}
+</script>
 </body>
 </html>
