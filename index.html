@@ -1,24 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>1 vs 1 Sudoku</title>
 
-<!-- Firebase (compat SDKs) -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <style>
 :root {
-  --bg: #0f172a;
-  --card: #020617;
-  --text: #e5e7eb;
-  --accent: #818cf8;
-  --secondary: #38bdf8;
-  --cell-bg: #020617;
-  --cell-disabled: #1e293b;
-  --grid-bold: #94a3b8;
+  --bg: #eef4ff;
+  --card: #ffffff;
+  --accent: #4f7cff;
+  --grid: #94a3b8;
+  --bold: #475569;
+  --cell: #f8fbff;
 }
 
 * { box-sizing: border-box; }
@@ -27,308 +25,260 @@ body {
   margin: 0;
   font-family: system-ui, sans-serif;
   background: var(--bg);
-  color: var(--text);
   display: flex;
   justify-content: center;
-  padding: 16px;
+  padding: 12px;
 }
 
 .app {
-  max-width: 380px;
   width: 100%;
+  max-width: 380px;
   background: var(--card);
   border-radius: 16px;
-  padding: 16px;
-  box-shadow: 0 12px 32px rgba(0,0,0,0.35);
+  padding: 14px;
 }
 
 h1 {
   text-align: center;
   color: var(--accent);
-  margin: 0 0 6px;
+  margin: 4px 0;
 }
 
 .subtitle {
   text-align: center;
   font-size: 13px;
-  opacity: 0.8;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
+  opacity: 0.75;
 }
 
-input, select, button {
+select, button, input {
   width: 100%;
   padding: 12px;
   border-radius: 12px;
   border: none;
-  font-size: 14px;
   margin-top: 8px;
+  font-size: 14px;
 }
 
 button {
   background: var(--accent);
-  color: #fff;
+  color: white;
   font-weight: 600;
 }
 
 .hidden { display: none; }
 
-.stats {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin: 10px 0;
-  font-weight: 600;
-  font-size: 13px;
-}
-
-.stats div {
-  background: var(--cell-disabled);
-  padding: 8px;
-  border-radius: 10px;
-  text-align: center;
-}
-
 .board {
   display: grid;
   grid-template-columns: repeat(9, 1fr);
-  grid-auto-rows: 1fr;
-  width: 100%;
-  max-width: 320px;
-  aspect-ratio: 1 / 1;
-  margin: 12px auto;
-  gap: 2px;
+  width: min(92vw, 320px);
+  aspect-ratio: 1;
+  margin: 10px auto;
+  gap: 1px;
 }
 
 .cell {
-  width: 100%;
-  height: 100%;
+  background: var(--cell);
+  border: 1px solid var(--grid);
+  border-radius: 6px;
   text-align: center;
   font-size: 18px;
-  font-weight: 700;
-  border-radius: 6px;
-  background: var(--cell-bg);
-  border: 1px solid #475569;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .cell:disabled {
-  background: var(--cell-disabled);
+  background: #dde7ff;
 }
 
-.cell.bold-right { border-right: 3px solid var(--grid-bold); }
-.cell.bold-bottom { border-bottom: 3px solid var(--grid-bold); }
+.cell.bold-r { border-right: 3px solid var(--bold); }
+.cell.bold-b { border-bottom: 3px solid var(--bold); }
 
 .pad {
   display: grid;
   grid-template-columns: repeat(9, 1fr);
   gap: 6px;
-  margin-top: 10px;
 }
 
 .pad button {
-  background: #1e293b;
-  color: #e5e7eb;
+  background: #dbe6ff;
+  color: #1e3a8a;
   font-weight: 700;
 }
 
 .reactions {
   display: flex;
   justify-content: space-around;
-  margin-top: 12px;
-  font-size: 22px;
-  cursor: pointer;
-}
-
-#reactionFeed {
-  text-align: center;
   margin-top: 8px;
-  font-size: 14px;
-  min-height: 18px;
+  font-size: 22px;
 }
 
 .footer {
   text-align: center;
-  margin-top: 12px;
-  opacity: 0.6;
   font-size: 12px;
+  opacity: 0.6;
+  margin-top: 6px;
 }
 </style>
 </head>
 
 <body>
 <div class="app">
-  <h1>1 vs 1 Sudoku</h1>
-  <div class="subtitle">Share link • Use same game</div>
 
-  <!-- SIGNUP -->
-  <div id="signup">
-    <select id="player">
-      <option value="A">Player A</option>
-      <option value="B">Player B</option>
-    </select>
-    <select id="difficulty">
-      <option value="easy">Easy</option>
-      <option value="medium" selected>Medium</option>
-      <option value="hard">Hard</option>
-    </select>
-    <button onclick="createOrJoin()">Create / Join</button>
+<h1>1 vs 1 Sudoku</h1>
+<div class="subtitle">Share link • Play simultaneously</div>
+
+<!-- SETUP -->
+<div id="setup">
+  <select id="player">
+    <option value="A">Chia</option>
+    <option value="B">Chiklu</option>
+  </select>
+
+  <select id="difficulty">
+    <option value="easy">Easy</option>
+    <option value="medium" selected>Medium</option>
+    <option value="hard">Hard</option>
+  </select>
+
+  <button onclick="joinGame()">Join Game</button>
+</div>
+
+<!-- GAME -->
+<div id="game" class="hidden">
+  <div class="board" id="board"></div>
+  <div class="pad" id="pad"></div>
+
+  <div class="reactions">
+    <span onclick="sendReaction('🔥')">🔥</span>
+    <span onclick="sendReaction('😂')">😂</span>
+    <span onclick="sendReaction('😤')">😤</span>
+    <span onclick="sendReaction('❤️')">❤️</span>
+    <span onclick="sendReaction('😈')">😈</span>
   </div>
 
-  <!-- LINK -->
-  <div id="linkBox" class="hidden">
-    <input id="shareLink" readonly>
-    <button onclick="copyLink()">Copy Link</button>
-    <button onclick="startGame()">Start Game</button>
-  </div>
+  <div id="reactionFeed"></div>
+</div>
 
-  <!-- GAME -->
-  <div id="game" class="hidden">
-    <div class="stats">
-      <div>⏱ <span id="time">00:00</span></div>
-      <div>❌ <span id="mistakes">0</span></div>
-    </div>
+<div class="footer">Made by chiklu with ❤️</div>
 
-    <div class="board" id="board"></div>
-
-    <div class="pad" id="pad"></div>
-
-    <div class="reactions">
-      <span onclick="sendReaction('🔥')">🔥</span>
-      <span onclick="sendReaction('😂')">😂</span>
-      <span onclick="sendReaction('😤')">😤</span>
-      <span onclick="sendReaction('❤️')">❤️</span>
-      <span onclick="sendReaction('😈')">😈</span>
-    </div>
-
-    <div id="reactionFeed"></div>
-  </div>
-
-  <div class="footer">Made by chiklu with ❤️</div>
 </div>
 
 <script>
-/* =========================
-   FIREBASE CONFIG (YOURS)
-   ========================= */
+/* FIREBASE */
 firebase.initializeApp({
   apiKey: "AIzaSyDVWYWtBbnIi4p2vEIcNPSypU5EcmDhPwU",
   authDomain: "vs1-sudoku.firebaseapp.com",
   databaseURL: "https://vs1-sudoku-default-rtdb.firebaseio.com",
   projectId: "vs1-sudoku",
-  storageBucket: "vs1-sudoku.firebasestorage.app",
-  messagingSenderId: "880053869688",
-  appId: "1:880053869688:web:5f15f0d2a048eefa23618d"
 });
 
 const db = firebase.database();
 
-/* =========================
-   GAME STATE
-   ========================= */
+/* GAME ID */
 const params = new URLSearchParams(location.search);
 const gameId = params.get("game") || Math.random().toString(36).slice(2);
 const ref = db.ref("games/" + gameId);
 
-let me = "";
-let selectedCell = null;
-let startTime = null;
-let timer = null;
-let mistakes = 0;
+/* SOLVED GRID */
+const SOLUTION =
+"534678912672195348198342567859761423426853791713924856961537284287419635345286179";
 
-/* =========================
-   SIMPLE GRID (visual demo)
-   ========================= */
-function buildGrid() {
-  const board = document.getElementById("board");
+/* PUZZLE GENERATOR */
+function generatePuzzle(diff) {
+  let blanks = diff === "easy" ? 32 : diff === "medium" ? 45 : 60;
+  let arr = SOLUTION.split("");
+  let removed = 0;
+  while (removed < blanks) {
+    let i = Math.floor(Math.random() * 81);
+    if (arr[i] !== "0") {
+      arr[i] = "0";
+      removed++;
+    }
+  }
+  return arr.join("");
+}
+
+/* FLOW */
+let me = "";
+let selected = null;
+
+function joinGame() {
+  me = player.value;
+  const diff = difficulty.value;
+
+  ref.once("value", snap => {
+    if (!snap.exists()) {
+      ref.set({
+        puzzle: generatePuzzle(diff)
+      });
+    }
+    startGame();
+  });
+
+  history.replaceState(null, "", "?game=" + gameId);
+}
+
+function startGame() {
+  setup.classList.add("hidden");
+  game.classList.remove("hidden");
+
+  ref.child("puzzle").once("value", snap => {
+    renderBoard(snap.val());
+  });
+
+  buildPad();
+}
+
+/* BOARD */
+function renderBoard(puzzle) {
   board.innerHTML = "";
-  for (let i = 0; i < 81; i++) {
+  puzzle.split("").forEach((v, i) => {
     const c = document.createElement("input");
     c.className = "cell";
     c.maxLength = 1;
 
     const r = Math.floor(i / 9);
     const col = i % 9;
-    if (col === 2 || col === 5) c.classList.add("bold-right");
-    if (r === 2 || r === 5) c.classList.add("bold-bottom");
+    if (col === 2 || col === 5) c.classList.add("bold-r");
+    if (r === 2 || r === 5) c.classList.add("bold-b");
 
-    c.onclick = () => selectedCell = c;
+    if (v !== "0") {
+      c.value = v;
+      c.disabled = true;
+    } else {
+      c.onclick = () => selected = c;
+    }
+
     board.appendChild(c);
-  }
+  });
+}
 
-  const pad = document.getElementById("pad");
+/* NUMBER PAD */
+function buildPad() {
   pad.innerHTML = "";
-  for (let n = 1; n <= 9; n++) {
-    const b = document.createElement("button");
-    b.textContent = n;
+  for (let i = 1; i <= 9; i++) {
+    let b = document.createElement("button");
+    b.textContent = i;
     b.onclick = () => {
-      if (selectedCell && !selectedCell.disabled) {
-        selectedCell.value = n;
-      }
+      if (selected && !selected.disabled) selected.value = i;
     };
     pad.appendChild(b);
   }
 }
 
-/* =========================
-   FLOW
-   ========================= */
-function createOrJoin() {
-  me = document.getElementById("player").value;
-  const diff = document.getElementById("difficulty").value;
-
-  ref.update({
-    difficulty: diff,
-    players: { [me]: true }
-  });
-
-  const link = `${location.origin}${location.pathname}?game=${gameId}`;
-  document.getElementById("shareLink").value = link;
-
-  document.getElementById("signup").classList.add("hidden");
-  document.getElementById("linkBox").classList.remove("hidden");
+/* REACTIONS */
+function sendReaction(e) {
+  ref.child("reactions").push({ from: me, e });
 }
 
-function copyLink() {
-  const i = document.getElementById("shareLink");
-  i.select();
-  document.execCommand("copy");
-}
-
-function startGame() {
-  document.getElementById("linkBox").classList.add("hidden");
-  document.getElementById("game").classList.remove("hidden");
-
-  buildGrid();
-  startTimer();
-}
-
-/* =========================
-   TIMER
-   ========================= */
-function startTimer() {
-  startTime = Date.now();
-  clearInterval(timer);
-  timer = setInterval(() => {
-    const t = Math.floor((Date.now() - startTime) / 1000);
-    const m = String(Math.floor(t / 60)).padStart(2, "0");
-    const s = String(t % 60).padStart(2, "0");
-    document.getElementById("time").textContent = `${m}:${s}`;
-  }, 1000);
-}
-
-/* =========================
-   REACTIONS (REALTIME)
-   ========================= */
-function sendReaction(emoji) {
-  ref.child("reactions").push({ from: me, emoji, ts: Date.now() });
-}
-
-ref.child("reactions").on("child_added", snap => {
-  const r = snap.val();
-  document.getElementById("reactionFeed").textContent = `${r.from}: ${r.emoji}`;
+ref.child("reactions").on("child_added", s => {
+  const r = s.val();
+  reactionFeed.textContent = `${r.from}: ${r.e}`;
 });
 </script>
+
 </body>
 </html>
