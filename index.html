@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1 vs 1 Sudoku</title>
+
+<style>
+:root {
+  --bg: #f5f3ef;
+  --card: #ffffff;
+  --text: #1f2937;
+  --accent: #4f46e5;
+  --secondary: #0ea5e9;
+  --cell-bg: #ffffff;
+  --cell-disabled: #e5e7eb;
+  --wrong: #fee2e2;
+}
+
+.dark {
+  --bg: #0f172a;
+  --card: #020617;
+  --text: #e5e7eb;
+  --accent: #818cf8;
+  --secondary: #38bdf8;
+  --cell-bg: #020617;
+  --cell-disabled: #1e293b;
+  --wrong: #7f1d1d;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  justify-content: center;
+  padding: 16px;
+}
+
+.app {
+  width: 100%;
+  max-width: 380px;
+  background: var(--card);
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.15);
+}
+
+h1 {
+  text-align: center;
+  margin: 0 0 6px;
+  color: var(--accent);
+}
+
+.subtitle {
+  text-align: center;
+  font-size: 13px;
+  margin-bottom: 10px;
+  opacity: 0.8;
+}
+
+input, select, button {
+  width: 100%;
+  padding: 10px;
+  border-radius: 12px;
+  border: none;
+  font-size: 14px;
+}
+
+button {
+  background: var(--accent);
+  color: white;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+button.secondary {
+  background: var(--secondary);
+}
+
+.toggle {
+  text-align: center;
+  font-size: 13px;
+  margin: 8px 0;
+  cursor: pointer;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 10px 0;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.stats div {
+  background: var(--cell-disabled);
+  padding: 8px;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  grid-auto-rows: 1fr;
+  width: 100%;
+  max-width: 320px;
+  aspect-ratio: 1 / 1;
+  margin: 12px auto;
+  gap: 2px;
+}
+
+.cell {
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+  border-radius: 6px;
+  background: var(--cell-bg);
+  border: 1px solid #9ca3af;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.cell:disabled {
+  background: var(--cell-disabled);
+}
+
+.cell.wrong {
+  background: var(--wrong);
+}
+
+.footer {
+  text-align: center;
+  font-size: 12px;
+  margin-top: 12px;
+  opacity: 0.7;
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+  <h1>1 vs 1 Sudoku</h1>
+  <div class="subtitle">Share link • Use same game code</div>
+
+  <input id="seedInput" placeholder="Game code (any number)">
+  <select id="difficulty">
+    <option value="easy">Easy</option>
+    <option value="medium" selected>Medium</option>
+    <option value="hard">Hard</option>
+  </select>
+
+  <button onclick="startGame()">Start Game</button>
+  <div class="toggle" onclick="toggleDark()">🌙 Toggle Dark Mode</div>
+
+  <div class="stats">
+    <div>Player A<br>🏆 <span id="scoreA">10000</span></div>
+    <div>Player B<br>🏆 <span id="scoreB">10000</span></div>
+  </div>
+
+  <div class="stats">
+    <div>⏱ <span id="time">00:00</span></div>
+    <div>❌ <span id="mistakes">0</span></div>
+  </div>
+
+  <div id="board" class="board"></div>
+
+  <div class="footer">
+    Made by chiklu with ❤️
+  </div>
+</div>
+
+<script>
+/* ---------- Fixed solved grid ---------- */
+const solution =
+"534678912672195348198342567859761423426853791713924856961537284287419635345286179";
+
+/* ---------- Seeded RNG ---------- */
+function rand(seed) {
+  return Math.abs(Math.sin(seed)) % 1;
+}
+
+/* ---------- Puzzle generator ---------- */
+function generatePuzzle(seed, difficulty) {
+  let blanks = { easy: 35, medium: 45, hard: 55 }[difficulty];
+  let puzzle = solution.split("");
+
+  for (let i = 0; i < blanks; i++) {
+    let idx = Math.floor(rand(seed + i) * 81);
+    puzzle[idx] = "0";
+  }
+  return puzzle.join("");
+}
+
+let startTime, timer, mistakes = 0;
+
+/* ---------- Game ---------- */
+function startGame() {
+  const seed = Number(seedInput.value || 1);
+  const diff = difficulty.value;
+  const puzzle = generatePuzzle(seed, diff);
+
+  const board = document.getElementById("board");
+  board.innerHTML = "";
+
+  mistakes = 0;
+  document.getElementById("mistakes").textContent = 0;
+  document.getElementById("scoreA").textContent = 10000;
+  document.getElementById("scoreB").textContent = 10000;
+
+  clearInterval(timer);
+  startTime = Date.now();
+  timer = setInterval(updateTimer, 1000);
+
+  puzzle.split("").forEach((v, i) => {
+    const c = document.createElement("input");
+    c.className = "cell";
+    c.maxLength = 1;
+
+    if (v !== "0") {
+      c.value = v;
+      c.disabled = true;
+    } else {
+      c.oninput = () => {
+        if (c.value === solution[i]) {
+          c.disabled = true;
+          checkWin();
+        } else {
+          c.classList.add("wrong");
+          mistakes++;
+          document.getElementById("mistakes").textContent = mistakes;
+        }
+      };
+    }
+    board.appendChild(c);
+  });
+}
+
+function updateTimer() {
+  const t = Math.floor((Date.now() - startTime) / 1000);
+  const m = String(Math.floor(t / 60)).padStart(2,"0");
+  const s = String(t % 60).padStart(2,"0");
+  document.getElementById("time").textContent = `${m}:${s}`;
+
+  const score = Math.max(0, 10000 - t * 2 - mistakes * 100);
+  document.getElementById("scoreA").textContent = score;
+  document.getElementById("scoreB").textContent = score;
+}
+
+function checkWin() {
+  if ([...document.querySelectorAll(".cell")].every((c,i)=>c.value==solution[i])) {
+    clearInterval(timer);
+    alert("Finished! Share your score 🏆");
+  }
+}
+
+function toggleDark() {
+  document.body.classList.toggle("dark");
+}
+</script>
+</body>
+</html>
